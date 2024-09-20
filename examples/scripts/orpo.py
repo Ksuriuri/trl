@@ -72,7 +72,7 @@ class ScriptArguments:
 
 if __name__ == "__main__":
     parser = HfArgumentParser((ScriptArguments, ORPOConfig, ModelConfig))
-    args, training_args, model_config = parser.parse_args_into_dataclasses()
+    args, orpo_args, model_config = parser.parse_args_into_dataclasses()
 
     ################
     # Model & Tokenizer
@@ -102,14 +102,14 @@ if __name__ == "__main__":
     # Compute that only on the main process for faster data processing.
     # see: https://github.com/huggingface/trl/pull/1255
     with PartialState().local_main_process_first():
-        dataset = dataset.map(process, num_prc=training_args.dataset_num_proc)
+        dataset = dataset.map(process, num_proc=orpo_args.dataset_num_proc)
 
     ################
     # Training
     ################
     trainer = ORPOTrainer(
         model,
-        args=training_args,
+        args=orpo_args,
         train_dataset=dataset["train"],
         eval_dataset=dataset["test"],
         tokenizer=tokenizer,
@@ -118,4 +118,4 @@ if __name__ == "__main__":
 
     # train and save the model
     trainer.train()
-    trainer.save_model(training_args.output_dir)
+    trainer.save_model(orpo_args.output_dir)
